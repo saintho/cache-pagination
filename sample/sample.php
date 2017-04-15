@@ -1,12 +1,15 @@
 <?php
 require '../src/CachePagination.php';
 
-$cachePageCount = 1;
-$cachePerPageNum = 2;
-$offset = 1;
-$limit = 1;
+/**
+ * 一页的情况
+ */
+$cachePageCount = 10;
+$cachePerPageNum = 9;
+$offset = 8;
+$limit = 21;
 
-$cal = new Saint\CachePagination\CachePagination($cachePageCount, $cachePerPageNum, $offset, $limit);
+$cal = new Saint\CachePagination\CachePagination($cachePageCount, $cachePerPageNum, $limit, $offset);
 $cal->exec();
 $result = $cal->getResult();
 

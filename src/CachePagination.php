@@ -13,7 +13,7 @@ class CachePagination
     protected $overBudget = true;
     protected $result;
 
-    public function __construct($cachePageCount, $cachePerPageNum, $offset, $limit)
+    public function __construct($cachePageCount, $cachePerPageNum, $limit, $offset)
     {
         $this->cachePageCount = $cachePageCount;
         $this->cachePerPageNum = $cachePerPageNum;
@@ -40,7 +40,7 @@ class CachePagination
         /**
          * check over budget
          */
-        if ($this->checkOverBudget($cachePageCount, $cachePerPageNum, $offset, $limit)) {
+        if ($this->checkOverBudget($cachePageCount, $cachePerPageNum, $limit, $offset)) {
             return $this->result = false;
         }
         $this->overBudget = false;
@@ -48,25 +48,25 @@ class CachePagination
         /**
          * 计算分页位置
          */
-        $this->result = $this->getCachePageAndPosition($cachePageCount, $cachePerPageNum, $offset, $limit);
+        $this->result = $this->getCachePageAndPosition($cachePageCount, $cachePerPageNum, $limit, $offset);
     }
 
 
     /**
      * 根据传入的offset获取cache的的分页位置
      * @param $cachePageCount
-     * @param $cachePageSize
+     * @param $cachePerPageNum
      * @param $selectLimit
      * @param $selectOffset
      * @return array
      */
-    protected function getCachePageAndPosition($cachePageCount, $cachePageSize, $selectLimit, $selectOffset)
+    protected function getCachePageAndPosition($cachePageCount, $cachePerPageNum, $selectLimit, $selectOffset)
     {
         /**
          * 设定分页
          */
-        $startPage = floor($selectOffset / $cachePageSize);
-        $endPage = floor(($selectOffset + $selectLimit - 1) / $cachePageSize);
+        $startPage = floor(($selectOffset) / $cachePerPageNum);
+        $endPage = floor(($selectOffset + $selectLimit - 1) / $cachePerPageNum);
         $diff = $endPage - $startPage;
         //同一页的情况
         if ($diff == 0) {
@@ -84,27 +84,27 @@ class CachePagination
         for ($i = 0; $i <= $diff; $i++) {
             //只有一页的情况
             if ($diff == 0) {
-                $startOffset = $selectOffset - $page[$i] * $cachePageSize;
-                $offset[] = [$startOffset, $startOffset + $selectLimit];
+                $startOffset = $selectOffset - $page[$i] * $cachePerPageNum;
+                $offset[] = [$startOffset, $selectLimit];
             }
             //有两页的情况
             if ($diff == 1) {
                 if ($i == 0) {
-                    $startOffset = $selectOffset - $page[$i] * $cachePageSize;
+                    $startOffset = $selectOffset - $page[$i] * $cachePerPageNum;
                     $offset[] = [$startOffset];
                 }
                 if ($i == 1) {
-                    $endLimit = $selectLimit - ($cachePageSize - $startOffset);
+                    $endLimit = $selectLimit - ($cachePerPageNum - $startOffset);
                     $offset[] = [0, $endLimit];
                 }
             }
             //有多页的情况
             if ($diff > 1) {
                 if ($i == 0) {
-                    $startOffset = $selectOffset - $page[$i] * $cachePageSize;
+                    $startOffset = $selectOffset - $page[$i] * $cachePerPageNum;
                     $offset[] = [$startOffset];
                 } elseif ($i == $diff) {
-                    $endLimit = $selectLimit - ($cachePageSize - $startOffset) - ($diff - 1) * $cachePageSize;
+                    $endLimit = $selectLimit - ($cachePerPageNum - $startOffset) - ($diff - 1) * $cachePerPageNum;
                     $offset[] = [0, $endLimit];
                 } else {
                     $offset[] = [0];
@@ -123,7 +123,7 @@ class CachePagination
         return $cacheOffset;
     }
 
-    private function checkOverBudget($cachePageCount, $cachePerPageNum, $offset, $length)
+    private function checkOverBudget($cachePageCount, $cachePerPageNum, $length, $offset)
     {
         $totalCount = $cachePageCount * $cachePerPageNum;
         if ($totalCount < ($offset + $length)) {
